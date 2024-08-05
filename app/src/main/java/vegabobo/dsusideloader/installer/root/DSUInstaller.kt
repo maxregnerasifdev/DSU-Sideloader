@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import android.os.SystemProperties
 import android.util.Log
 import java.io.BufferedInputStream
 import java.io.File
@@ -104,10 +103,16 @@ class DSUInstaller(
             } else {
                 Log.d(tag, "$fileName installation is not supported, skip it.")
             }
+            if (installationJob.isCancelled) {
+                break
+            }
+        }
+        return true
+    }
 
     private fun startInstallation() {
         PrivilegedProvider.getService().setDynProp()
-        if (SystemProperties.getBoolean("gsid.image_running", false)) {
+        if (getBooleanSystemProperty("gsid.image_running", false)) {
             onInstallationError(InstallationStep.ERROR_ALREADY_RUNNING_DYN_OS, "")
             return
         }
@@ -165,5 +170,15 @@ class DSUInstaller(
 
     override fun invoke() {
         startInstallation()
+    }
+
+    private fun getBooleanSystemProperty(key: String, defaultValue: Boolean): Boolean {
+        return try {
+            val value = SystemProperties.get(key)
+            if (value.isEmpty()) defaultValue else value.toBoolean()
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to get system property: $key", e)
+            defaultValue
+        }
     }
 }
