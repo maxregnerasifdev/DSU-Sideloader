@@ -104,12 +104,6 @@ class DSUInstaller(
             } else {
                 Log.d(tag, "$fileName installation is not supported, skip it.")
             }
-            if (installationJob.isCancelled) {
-                break
-            }
-        }
-        return true
-    }
 
     private fun startInstallation() {
         PrivilegedProvider.getService().setDynProp()
